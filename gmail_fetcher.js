@@ -441,10 +441,9 @@ function createApplication() {
    */
   app.notifyBot = function (data) {
     console.log(`Notify Bot: ${process.env.BOT_NOTIFY_URL}`);
-    console.log("Data")
-    console.log(data);
+    console.log(`Incoming Data ${data}`);
 
-    if (data.code != "000")
+    if (JSON.parse(data).code != "000")
     {
       console.log("No new message");
       return;
