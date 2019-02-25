@@ -444,6 +444,12 @@ function createApplication() {
     console.log("Data")
     console.log(data);
 
+    if (data.code != "000")
+    {
+      console.log("No new message");
+      return;
+    }
+
     var header = {
       headers: {
         'Content-Type': 'application/json',
