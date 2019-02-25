@@ -407,6 +407,7 @@ function createApplication() {
   }
 
   app.listMessage = function (opts) {
+    console.log(`List message : ${process.env.GCF_LIST_URL}`);
     return axios.get(process.env.GCF_LIST_URL)
       .then((response) => {
         console.log(`List Response : ${response.data.code}`);
@@ -416,7 +417,7 @@ function createApplication() {
   }
 
   app.getMail = function (data) {
-
+    console.log(`Get Mail : ${process.env.GCF_GET_URL}`);
     var header = {
       headers: {
         'Content-Type': 'application/json',
@@ -439,16 +440,15 @@ function createApplication() {
    * Notify Bot
    */
   app.notifyBot = function (data) {
+    console.log(`Notify Bot: ${process.env.BOT_NOTIFY_URL}`);
+    console.log("Data")
+    console.log(data);
 
-    console.log(`Notify Bot : ${data}`);
     var header = {
       headers: {
-        'Content-Type': 'application/notify-json',  // Bot Call back issue, so cannot use normal json
+        'Content-Type': 'application/json',
       }
     };
-
-    console.log("Going to send to : " + process.env.BOT_NOTIFY_URL);
-    console.log(data);
 
     return axios({
         method: "POST",
