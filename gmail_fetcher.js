@@ -457,7 +457,7 @@ function createApplication() {
         data: data
       })
       .then(function (response) {
-        console.log(`Response : ` + JSON.stringify(response));
+        console.log(`Response : ` + response);
         return response;
       });
   }
