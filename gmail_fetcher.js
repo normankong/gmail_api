@@ -304,7 +304,14 @@ function createApplication() {
       obj = JSON.stringify(obj, null, 2);
     }
     console.log(`Response to client : ${obj}`);
-    opts.res.end(obj);
+
+    if (opts.res != null) {
+      opts.res.end(obj);
+    } else {
+      if (opts.context.eventType = "google.pubsub.topic.publish") {// Notify Bot
+        app.notifyBot(obj);
+      }
+    }
   }
 
   app.debug = function (msg, obj) {
@@ -394,15 +401,7 @@ function createApplication() {
         app.getMail(reqData)
           .then(resp => {
             //app.debug("Get mail result ", resp);
-
-            if (opts.res != null) {
-              app.send(opts, resp.data);
-            } else {
-              if (opts.context.eventType = "google.pubsub.topic.publish") {
-                // Notify Bot
-                app.notifyBot(resp.data);
-              }
-            }
+            app.send(opts, resp.data);
           })
       });
   }
@@ -441,11 +440,15 @@ function createApplication() {
    */
   app.notifyBot = function (data) {
 
+    console.log(`Notify Bot : ${data}`);
     var header = {
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/notify-json',  // Bot Call back issue, so cannot use normal json
       }
     };
+
+    console.log("Going to send to : " + process.env.BOT_NOTIFY_URL);
+    console.log(data);
 
     return axios({
         method: "POST",
@@ -454,7 +457,7 @@ function createApplication() {
         data: data
       })
       .then(function (response) {
-        console.log(`Response : ${response}`);
+        console.log(`Response : ` + JSON.stringify(response));
         return response;
       });
   }
