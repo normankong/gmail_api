@@ -28,7 +28,6 @@ exports.distinct = (req, res) => {
         }));
     }
 
-
     if (!mysqlPool) {
         mysqlPool = mysql.createPool(mysqlConfig);
     }
@@ -49,16 +48,16 @@ exports.distinct = (req, res) => {
         });
     };
 
-    var resultList = [];
-    let msgIdList = req.body.data;
-
-    var proceed = function (msgIdList, resultList) {
+    // Recurrsive function to check uniqueness
+    let proceed = function (msgIdList, resultList) {
         if (msgIdList.length == 0) {
             res.send(JSON.stringify({
                 code: "000",
                 data: resultList
             }));
+            return;
         }
+
         let msgId = msgIdList.shift();
         console.log(`Checking : ${msgId}`);
         distinctFun(msgId).then(code => {
@@ -71,7 +70,8 @@ exports.distinct = (req, res) => {
         })
     }
 
-    // Proceed the Checking
+    // Proceed the Checking    
+    let msgIdList = req.body.data;
     return proceed(msgIdList, []);
 };
 
@@ -94,6 +94,4 @@ exports.mysqlDemo = (req, res) => {
         }
     });
 
-    // Close any SQL resources that were declared inside this function.
-    // Keep any declared in global scope (e.g. mysqlPool) for later reuse.
 };

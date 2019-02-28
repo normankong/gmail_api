@@ -33,7 +33,7 @@ bankList.push(bank);
 
 
 function createApplication() {
-  var app = {};
+  let app = {};
 
   app.init = function () {}
 
@@ -55,7 +55,7 @@ function createApplication() {
     }, (err, res) => {
       if (err) {
         console.log('List mail returned an error: ', err);
-        var result = {
+        let result = {
           code: "409",
           message: "List mail return an error"
         }
@@ -88,7 +88,7 @@ function createApplication() {
     // List Message Completed Successfully
     if (nextPageToken == null) {
 
-      var result = {
+      let result = {
         code: "000",
         message: "List message sucessfully",
         data: resultList
@@ -108,7 +108,7 @@ function createApplication() {
       'maxResults': GMAIL_FETCH_COUNT
     }, (err, res) => {
       if (err) {
-        var result = {
+        let result = {
           code: "409",
           message: "List mail return an error"
         }
@@ -137,7 +137,7 @@ function createApplication() {
     console.log(opts.req.body.data)
 
     // Prepare call back function
-    var getMail = function (auth, opts, msgList, resultList) {
+    let _getMail = function (auth, opts, msgList, resultList) {
 
       if (msgList.length == 0) {
         console.log("Fetch all message successfully");
@@ -145,7 +145,7 @@ function createApplication() {
         return;
       }
 
-      var gmail = app.getGmail(auth);
+      let gmail = app.getGmail(auth);
       let msgId = msgList.shift();
 
       gmail.users.messages.get({
@@ -160,7 +160,7 @@ function createApplication() {
             error: err
           });
         } else {
-          var data = (res.data.payload.body.data)
+          let data = (res.data.payload.body.data)
           let buff = new Buffer(data, 'base64');
           let text = buff.toString('ascii');
 
@@ -171,7 +171,7 @@ function createApplication() {
           });
         }
 
-        getMail(auth, opts, msgList, resultList)
+        _getMail(auth, opts, msgList, resultList)
 
       });
       return;
@@ -180,7 +180,7 @@ function createApplication() {
     // Prepare Parameter
     var msgList = opts.req.body.data.slice(0);
     let resultList = [];
-    getMail(auth, opts, msgList, resultList);
+    _getMail(auth, opts, msgList, resultList);
   }
 
   app.processMessage = function (auth, opts, messageList) {
@@ -246,58 +246,6 @@ function createApplication() {
       app.send(opts, result);
     });
   }
-  // app.modify = function (auth, opts) {
-  //   console.log("Modify Email Web Request");
-
-  //   // Prepare call back function
-  //   let modifyLabel = function (auth, opts, msgList, resultList) {
-
-  //     if (msgList.length == 0) {
-  //       // Return to Client
-  //       let result = {
-  //         code: "000",
-  //         data: resultList
-  //       };
-  //       app.send(opts, result);
-  //       return;
-  //     }
-
-  //     let gmail = app.getGmail(auth);
-  //     let msgId = msgList.shift();
-
-  //     gmail.users.messages.modify({
-  //       'userId': GMAIL_MAIL_ADDRESS,
-  //       'id': msgId,
-  //       resource: {
-  //         'addLabelIds': [],
-  //         'removeLabelIds': ["UNREAD"]
-  //       }
-  //     }, (err, res) => {
-  //       if (err) {
-  //         resultList.push({
-  //           id: msgId,
-  //           code: "409",
-  //           message: "Modify email fails",
-  //           error: err
-  //         });
-  //       } else {
-  //         resultList.push({
-  //           id: msgId,
-  //           code: "000"
-  //         });
-  //       }
-
-  //       modifyLabel(auth, opts, msgList, resultList)
-
-  //     });
-  //     return;
-  //   }
-
-  //   // Prepare Parameter
-  //   let resultList = [];
-  //   var msgList = opts.req.body.data.slice(0);
-  //   modifyLabel(auth, opts, msgList, resultList);
-  // }
 
   app.send = function (opts, obj) {
     if (obj.constructor == Object || obj.constructor == Array) {
@@ -328,18 +276,18 @@ function createApplication() {
    */
   app.parseMessage = function (msgObj) {
 
-    var text = msgObj.message;
+    let text = msgObj.message;
 
     // Parse Message for delivery
-    for (var i = 0; i < bankList.length; i++) {
+    for (let i = 0; i < bankList.length; i++) {
 
-      var bank = bankList[i];
-      var body = textParser.parseMessage(text, bank.head, bank.tail);
+      let bank = bankList[i];
+      let body = textParser.parseMessage(text, bank.head, bank.tail);
       if (body == null) continue;
 
-      var payer = textParser.parseMessage(body, bank.payerHead, bank.payerTail);
-      var creditAccount = textParser.parseMessage(body, bank.acctHead, bank.acctTail);
-      var creditAmount = textParser.parseMessage(body, bank.amtHead, bank.amtTail);
+      let payer = textParser.parseMessage(body, bank.payerHead, bank.payerTail);
+      let creditAccount = textParser.parseMessage(body, bank.acctHead, bank.acctTail);
+      let creditAmount = textParser.parseMessage(body, bank.amtHead, bank.amtTail);
 
       let result = {
         code: "000",
@@ -379,61 +327,86 @@ function createApplication() {
   }
 
   app.notify = function (opts) {
-    app.listMessage()
-      .then(data => {
-        console.log(`Message ID List : ${data.data}`);
 
-        if (data.data.length == 0) {
-          app.send(opts, {
-            code: "999",
-            message: "No new message"
+    // List the Mail
+    app.listMail()
+      .then(listResp => {
+        console.log(`Notify with Message ID List : ${listResp.data.data}`);
+
+        // Send to Distinct List
+        app.distinctMail(listResp.data)
+          .then(distResp => {
+            console.log(`Distinct List Result : ` + JSON.stringify(distResp.data));
+
+            // Get Message List
+            // var distResp = listResp;
+            app.getMail(distResp.data)
+              .then(mailResp => {
+                //app.debug("Get mail result ", resp);
+                app.send(opts, mailResp.data);
+              })
           });
-          return;
-        }
-
-        var reqData = {
-          data: data.data,
-          markAsRead: true
-        }
-        console.log(`ReqData : ${reqData}`)
-
-        // Trigger Get Message List
-        app.getMail(reqData)
-          .then(resp => {
-            //app.debug("Get mail result ", resp);
-            app.send(opts, resp.data);
-          })
       });
   }
 
-  app.listMessage = function (opts) {
+  app.listMail = function (opts) {
 
     console.log(`List message : ${process.env.GCF_LIST_URL}`);
+
+    // Perform HTTP call
     return axios.get(process.env.GCF_LIST_URL)
       .then((response) => {
-        console.log(`List Response : ${response.data.code}`);
+        console.log(`List Mail URL Response : ` + JSON.stringify(response.data));
+        return response;
+      });
+  }
 
-        // Trigger Distinct List
-        app.distinctList(response).then(resp => {
-          console.log(`Distinct List : ${resp.data.data} `)
-          return resp.data;
-        })
+  /**
+   * Distinct the List
+   */
+  app.distinctMail = function (data) {
+
+    console.log(`Distinc List: ${process.env.GCF_DISTINCT_URL}`);
+    console.log(`Distinc List Incoming Data : ` + JSON.stringify(data));
+
+    let reqData = {
+      data: data.data
+    }
+
+    console.log("Sending to distinct : " + JSON.stringify(reqData));
+
+    // Perform HTTP Post
+    return axios({
+        method: "POST",
+        url: process.env.GCF_DISTINCT_URL,
+        headers: app.getRequestHeader(),
+        data: reqData
+      })
+      .then(function (response) {
+        console.log(`Distinc List Response : ` + JSON.stringify(response.data));
+        return response;
       });
   }
 
   app.getMail = function (data) {
+
     console.log(`Get Mail : ${process.env.GCF_GET_URL}`);
+    console.log(`Get Mail Incoming Data : ` + JSON.stringify(data));
 
-    var header = app.getRequestHeader();
+    let reqData = {
+      markAsRead: true,
+      data: data.data
+    }
 
+    //Perform HTTP call
     return axios({
         method: "POST",
         url: process.env.GCF_GET_URL,
-        headers: header,
-        data: data
+        headers: app.getRequestHeader(),
+        data: reqData
       })
       .then(function (response) {
-        console.log(`Response : ${response}`);
+        console.log(`Get Mail Response Data ` + JSON.stringify(response.data));
         return response;
       });
   }
@@ -442,54 +415,24 @@ function createApplication() {
    * Notify Bot
    */
   app.notifyBot = function (data) {
+
     console.log(`Notify Bot: ${process.env.BOT_NOTIFY_URL}`);
     console.log(`Incoming Data ${data}`);
 
-    if (JSON.parse(data).code != "000") {
-      console.log("No new message");
-      return;
-    }
-
-
-    var header = app.getRequestHeader();
-
+    // Perform HTTP Post
     return axios({
         method: "POST",
         url: process.env.BOT_NOTIFY_URL,
-        headers: header,
+        headers: app.getRequestHeader(),
         data: data
       })
       .then(function (response) {
-        console.log(`Response : ` + response);
+        console.log(`NotifyBot Response : ` + response.data);
         return response;
       });
   }
 
-  /**
-   * Distinct the List
-   */
-  app.distinctList = function (data) {
-    console.log(`Distinc List: ${process.env.GCF_DISTINCT_URL}`);
-    console.log(`Incoming Data ${data}`);
 
-    if (data.code != "000") {
-      console.log("No new message");
-      return;
-    }
-
-    var header = app.getRequestHeader();
-
-    return axios({
-        method: "POST",
-        url: process.env.GCF_DISTINCT_URL,
-        headers: header,
-        data: data
-      })
-      .then(function (response) {
-        console.log(`Response : ` + response);
-        return response;
-      });
-  }
 
   // Append JSON Header
   app.getRequestHeader = function (header, contextType) {
@@ -505,3 +448,58 @@ function createApplication() {
 }
 
 exports = module.exports = createApplication;
+
+
+
+// app.modify = function (auth, opts) {
+//   console.log("Modify Email Web Request");
+
+//   // Prepare call back function
+//   let modifyLabel = function (auth, opts, msgList, resultList) {
+
+//     if (msgList.length == 0) {
+//       // Return to Client
+//       let result = {
+//         code: "000",
+//         data: resultList
+//       };
+//       app.send(opts, result);
+//       return;
+//     }
+
+//     let gmail = app.getGmail(auth);
+//     let msgId = msgList.shift();
+
+//     gmail.users.messages.modify({
+//       'userId': GMAIL_MAIL_ADDRESS,
+//       'id': msgId,
+//       resource: {
+//         'addLabelIds': [],
+//         'removeLabelIds': ["UNREAD"]
+//       }
+//     }, (err, res) => {
+//       if (err) {
+//         resultList.push({
+//           id: msgId,
+//           code: "409",
+//           message: "Modify email fails",
+//           error: err
+//         });
+//       } else {
+//         resultList.push({
+//           id: msgId,
+//           code: "000"
+//         });
+//       }
+
+//       modifyLabel(auth, opts, msgList, resultList)
+
+//     });
+//     return;
+//   }
+
+//   // Prepare Parameter
+//   let resultList = [];
+//   var msgList = opts.req.body.data.slice(0);
+//   modifyLabel(auth, opts, msgList, resultList);
+// }
