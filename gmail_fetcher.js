@@ -450,7 +450,7 @@ function createApplication() {
       return;
     }
 
- 
+
     var header = app.getRequestHeader();
 
     return axios({
@@ -472,7 +472,7 @@ function createApplication() {
     console.log(`Distinc List: ${process.env.GCF_DISTINCT_URL}`);
     console.log(`Incoming Data ${data}`);
 
-    if (JSON.parse(data).code != "000") {
+    if (data.code != "000") {
       console.log("No new message");
       return;
     }
@@ -494,7 +494,7 @@ function createApplication() {
   // Append JSON Header
   app.getRequestHeader = function (header, contextType) {
     if (header == null) header = {};
-    if (contextType == null) contextType = "application/json'"; 
+    if (contextType == null) contextType = "application/json'";
     header.headers = {
       'Content-Type': contextType
     }
