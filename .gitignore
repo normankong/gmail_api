@@ -60,6 +60,8 @@ typings/
 # next.js build output
 .next
 
+.gcloudignore
+
 *.code-workspace
 obsolete
 .env
@@ -68,3 +70,4 @@ key
 package-lock.json
 *credential.json
 *token*.json
+*.zip

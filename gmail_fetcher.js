@@ -308,7 +308,7 @@ function createApplication() {
     if (opts.res != null) {
       opts.res.end(obj);
     } else {
-      if (opts.context.eventType = "google.pubsub.topic.publish") {// Notify Bot
+      if (opts.context.eventType = "google.pubsub.topic.publish") { // Notify Bot
         app.notifyBot(obj);
       }
     }
@@ -407,22 +407,24 @@ function createApplication() {
   }
 
   app.listMessage = function (opts) {
+
     console.log(`List message : ${process.env.GCF_LIST_URL}`);
     return axios.get(process.env.GCF_LIST_URL)
       .then((response) => {
         console.log(`List Response : ${response.data.code}`);
 
-        return response.data;
+        // Trigger Distinct List
+        app.distinctList(response).then(resp => {
+          console.log(`Distinct List : ${resp.data.data} `)
+          return resp.data;
+        })
       });
   }
 
   app.getMail = function (data) {
     console.log(`Get Mail : ${process.env.GCF_GET_URL}`);
-    var header = {
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    };
+
+    var header = app.getRequestHeader();
 
     return axios({
         method: "POST",
@@ -443,17 +445,13 @@ function createApplication() {
     console.log(`Notify Bot: ${process.env.BOT_NOTIFY_URL}`);
     console.log(`Incoming Data ${data}`);
 
-    if (JSON.parse(data).code != "000")
-    {
+    if (JSON.parse(data).code != "000") {
       console.log("No new message");
       return;
     }
 
-    var header = {
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    };
+ 
+    var header = app.getRequestHeader();
 
     return axios({
         method: "POST",
@@ -465,6 +463,42 @@ function createApplication() {
         console.log(`Response : ` + response);
         return response;
       });
+  }
+
+  /**
+   * Distinct the List
+   */
+  app.distinctList = function (data) {
+    console.log(`Distinc List: ${process.env.GCF_DISTINCT_URL}`);
+    console.log(`Incoming Data ${data}`);
+
+    if (JSON.parse(data).code != "000") {
+      console.log("No new message");
+      return;
+    }
+
+    var header = app.getRequestHeader();
+
+    return axios({
+        method: "POST",
+        url: process.env.GCF_DISTINCT_URL,
+        headers: header,
+        data: data
+      })
+      .then(function (response) {
+        console.log(`Response : ` + response);
+        return response;
+      });
+  }
+
+  // Append JSON Header
+  app.getRequestHeader = function (header, contextType) {
+    if (header == null) header = {};
+    if (contextType == null) contextType = "application/json'"; 
+    header.headers = {
+      'Content-Type': contextType
+    }
+    return header;
   }
 
   return app;

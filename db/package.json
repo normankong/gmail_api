@@ -1,5 +1,5 @@
 {
-  "name": "gmail_api",
+  "name": "gmail_db",
   "version": "1.0.0",
   "description": "Norman K K Kong",
   "main": "index.js",
@@ -7,14 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/normankong/gmail_api.git"
-  },
   "keywords": [
-    "Gmail",
-    "API",
-    "automation"
   ],
   "author": "Norman Kong",
   "license": "ISC",
@@ -23,10 +16,6 @@
   },
   "homepage": "https://github.com/normankong/gmail_api#readme",
   "dependencies": {
-    "@google-cloud/pubsub": "^0.24.1",
-    "axios": "^0.18.0",
-    "dotenv": "^6.2.0",
-    "googleapis": "^37.2.0",
     "mysql": "^2.16.0"
   },
   "devDependencies": {}
