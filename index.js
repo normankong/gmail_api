@@ -1,7 +1,7 @@
 require('dotenv').config();
 
-var gmailAuthenicator = require("./gmail_authenicator.js");
-var gmailFetcher = require("./gmail_fetcher.js");
+var gmailAuthenicator = require("./lib/gmail_authenicator.js");
+var gmailFetcher = require("./lib/gmail_fetcher.js");
 
 const util = require('util')
 const fs = require('fs');
