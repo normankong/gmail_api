@@ -1,13 +1,14 @@
+require('dotenv').config();
 const mysql = require('mysql');
 
-const connectionName = process.env.INSTANCE_CONNECTION_NAME || 'gmailapi-232415:us-central1:gmail-db';
-const dbUser = process.env.SQL_USER || 'service';
-const dbPassword = process.env.SQL_PASSWORD || '100086241424595903603';
-const dbName = process.env.SQL_NAME || 'checking';
+const connectionName = process.env.SQL_CONNECTION;
+const dbUsername = process.env.SQL_USERNAME;
+const dbPassword = process.env.SQL_PASSWORD;
+const dbName = process.env.SQL_DBNAME;
 
 const mysqlConfig = {
     connectionLimit: 1,
-    user: dbUser,
+    user: dbUsername,
     password: dbPassword,
     database: dbName,
 };
@@ -77,21 +78,21 @@ exports.distinct = (req, res) => {
 
 
 
-exports.mysqlDemo = (req, res) => {
-    // Initialize the pool lazily, in case SQL access isn't needed for this
-    // GCF instance. Doing so minimizes the number of active SQL connections,
-    // which helps keep your GCF instances under SQL connection limits.
-    if (!mysqlPool) {
-        mysqlPool = mysql.createPool(mysqlConfig);
-    }
+// exports.mysqlDemo = (req, res) => {
+//     // Initialize the pool lazily, in case SQL access isn't needed for this
+//     // GCF instance. Doing so minimizes the number of active SQL connections,
+//     // which helps keep your GCF instances under SQL connection limits.
+//     if (!mysqlPool) {
+//         mysqlPool = mysql.createPool(mysqlConfig);
+//     }
 
-    mysqlPool.query('SELECT * from checking', (err, results) => {
-        if (err) {
-            console.error(err);
-            res.status(500).send(err);
-        } else {
-            res.send(JSON.stringify(results));
-        }
-    });
+//     mysqlPool.query('SELECT * from checking', (err, results) => {
+//         if (err) {
+//             console.error(err);
+//             res.status(500).send(err);
+//         } else {
+//             res.send(JSON.stringify(results));
+//         }
+//     });
 
-};
+// };
