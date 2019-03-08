@@ -24,7 +24,7 @@ function generateToken(opts) {
 function verifyToken(opts) {
 
   console.log("Verify Token");
-  if (opts.req.headers.authorization == null) {
+  if (opts.req.headers.authorization == null || opts.req.body.emailAddress == null) {
     console.log("Missing parameter");
     opts.res.status(401).json({
       code: "000",
@@ -35,7 +35,8 @@ function verifyToken(opts) {
 
   // Use the Authorization Header to proceed the verification
   let token = opts.req.headers.authorization;
-  if (authHelper().verifyToken(token)) {
+  let emailAddress = opts.req.body.emailAddress;
+  if (authHelper().verifyToken(token, emailAddress)) {
     return true;
   } else {
     opts.res.status(401).json({
