@@ -27,6 +27,7 @@
     "axios": "^0.18.0",
     "dotenv": "^6.2.0",
     "googleapis": "^37.2.0",
+    "jsonwebtoken": "^8.5.0",
     "mysql": "^2.16.0",
     "redis": "^2.8.0",
     "redis_client": "file:redis"

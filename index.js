@@ -3,78 +3,61 @@ require('dotenv').config();
 var gmailAuthenicator = require("./lib/gmail_authenicator.js");
 var gmailFetcher = require("./lib/gmail_fetcher.js");
 var gmailNotifier = require("./lib/gmail_notifier.js");
+let authHelper = require("./lib/auth_helper.js");
 
-// const util = require('util')
-// const fs = require('fs');
+function generateToken(opts) {
 
-// const {
-//   google
-// } = require('googleapis');
+  console.log("Generate Token");
+  if (opts.req.body.emailAddress == null) return res.end("Bad request");
+  
+  let myToken = authHelper().generateToken(opts.req.body.emailAddress);
+  opts.res.json({
+    code: "000",
+    token: myToken
+  });
+  return;
+}
 
-// // If modifying these scopes, delete token.json.
-// const SCOPES = ['https://www.googleapis.com/auth/gmail.modify'];
-// const TOKEN_PATH = process.env.GMAIL_TOKEN_PATH;
-// const OAUTH_CREDENTIALS = process.env.OAUTH_CREDENTIALS;
+/**
+ * Verify JWT Token
+ */
+function verifyToken(opts) {
 
-// function proceedServiceCall(callback, callbackParam) {
-//   // Load client secrets from a local file.
-//   fs.readFile(OAUTH_CREDENTIALS, (err, content) => {
-//     if (err) return console.log('Error loading client secret file:', err);
-//     // Authorize a client with credentials, then call the Gmail API.
-//     authorize(JSON.parse(content), callback, callbackParam);
-//   });
-// }
+  console.log("Verify Token");
+  if (opts.req.headers.authorization == null) {
+    console.log("Missing parameter");
+    opts.res.status(401).json({
+      code: "000",
+      message: "Bad Request"
+    });
+    return false;
+  }
 
-// /**
-//  * Create an OAuth2 client with the given credentials, and then execute the
-//  * given callback function.
-//  * @param {Object} credentials The authorization client credentials.
-//  * @param {function} callback The callback to call with the authorized client.
-//  * @param {Object} callbackParam The callback param to call with the authorized client.
-//  */
-// function authorize(credentials, callback, callbackParam) {
-//   const {
-//     client_secret,
-//     client_id,
-//     redirect_uris
-//   } = credentials.installed;
-//   const oAuth2Client = new google.auth.OAuth2(
-//     client_id, client_secret, redirect_uris[0]);
+  // Use the Authorization Header to proceed the verification
+  let token = opts.req.headers.authorization;
+  if (authHelper().verifyToken(token)) {
+    return true;
+  } else {
+    opts.res.status(401).json({
+      code: "401",
+      message: "Unauthorized"
+    });
+    return false;
+  }
+}
 
-//   // Check if we have previously stored a token.
-//   fs.readFile(TOKEN_PATH, (err, token) => {
-//     if (err) return getNewToken(oAuth2Client, callbackParam);
-//     oAuth2Client.setCredentials(JSON.parse(token));
-//     if (callback != null) callback(oAuth2Client, callbackParam);
-//   });
-// }
+/**
+ * Generate Token Request
+ */
+exports.generate = (req, res) => {
+  console.log("Generate Token");
+  var opts = {
+    req: req,
+    res: res
+  }
 
-// /**
-//  * Get and store new token after prompting for user authorization, and then
-//  * execute the given callback with the authorized OAuth2 client.
-//  * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
-//  * @param {getEventsCallback} callbackParam The callback for the authorized client.
-//  */
-// function getNewToken(oAuth2Client, callbackParam) {
-
-//   // Get the Authorization Email
-//   const authUrl = oAuth2Client.generateAuthUrl({
-//     access_type: 'offline',
-//     scope: SCOPES,
-//   });
-
-//   // Send back to Client
-//   var result = {
-//     code: "401",
-//     message: "Authorization is required",
-//     authUrl: authUrl
-//   }
-
-//   var res = callbackParam.res;
-//   res.end(JSON.stringify(result));
-
-//   return;
-// }
+  generateToken(opts);
+}
 
 /**
  * Watch Mail request
@@ -85,7 +68,8 @@ exports.watch = (req, res) => {
     req: req,
     res: res
   }
-  gmailAuthenicator().proceedServiceCall(gmailAuthenicator().subscribeWatch, opts);
+
+  if (verifyToken(opts)) gmailAuthenicator().proceedServiceCall(gmailAuthenicator().subscribeWatch, opts);
 }
 
 /**
@@ -98,9 +82,7 @@ exports.auth = (req, res) => {
     req: req,
     res: res
   }
-  gmailAuthenicator().authMail(opts);
-
-  //proceedServiceCall(gmailFetcher().getProfile, opts);
+  if (verifyToken(opts)) gmailAuthenicator().authMail(opts);
 }
 
 /**
@@ -112,7 +94,7 @@ exports.list = (req, res) => {
     req: req,
     res: res
   }
-  gmailAuthenicator().proceedServiceCall(gmailFetcher().list, opts);
+  if (verifyToken(opts)) gmailAuthenicator().proceedServiceCall(gmailFetcher().list, opts);
 }
 
 /**
@@ -124,7 +106,7 @@ exports.get = (req, res) => {
     req: req,
     res: res
   }
-  gmailAuthenicator().proceedServiceCall(gmailFetcher().get, opts);
+  if (verifyToken(opts)) gmailAuthenicator().proceedServiceCall(gmailFetcher().get, opts);
 }
 
 /**
@@ -136,7 +118,7 @@ exports.modify = (req, res) => {
     req: req,
     res: res
   }
-  gmailAuthenicator().proceedServiceCall(gmailFetcher().modify, opts);
+  if (verifyToken(opts)) gmailAuthenicator().proceedServiceCall(gmailFetcher().modify, opts);
 }
 
 /**
@@ -148,7 +130,7 @@ exports.getProfile = (req, res) => {
     req: req,
     res: res
   }
-  gmailAuthenicator().proceedServiceCall(gmailFetcher().getProfile, opts);
+  if (verifyToken(opts)) gmailAuthenicator().proceedServiceCall(gmailFetcher().getProfile, opts);
 }
 
 
@@ -161,7 +143,7 @@ exports.notify = (req, res) => {
     req: req,
     res: res
   }
-  gmailNotifier().notify(opts);
+  if (verifyToken(opts)) gmailNotifier().notify(opts);
 }
 
 /**
@@ -177,7 +159,7 @@ exports.listen = (event, callback) => {
 
   const pubsubMessage = event.data;
   const data = JSON.parse(Buffer.from(pubsubMessage.data, 'base64').toString());
-    
+
   gmailNotifier().listen(event, data);
 
   callback();
