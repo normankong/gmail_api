@@ -24,11 +24,13 @@ function generateToken(opts) {
 function verifyToken(opts) {
 
   console.log("Verify Token");
-  if (opts.req.headers.authorization == null || opts.req.body.emailAddress == null) {
+  if (opts.req.headers.authorization == null || opts.req.body.emailAddress == null ) {
     console.log("Missing parameter");
     opts.res.status(401).json({
       code: "000",
-      message: "Bad Request"
+      message: "Bad Request",
+      auth : (opts.req.headers.authorization == null),
+      email : (opts.req.body.emailAddress == null)
     });
     return false;
   }
@@ -144,7 +146,7 @@ exports.notify = (req, res) => {
     req: req,
     res: res
   }
-  if (verifyToken(opts)) gmailNotifier().notify(opts);
+  gmailNotifier().notify(opts);
 }
 
 /**
