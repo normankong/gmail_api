@@ -16,8 +16,6 @@ if (process.env.NODE_ENV === 'production') {
     mysqlConfig.socketPath = `/cloudsql/${connectionName}`;
 }
 
-// Connection pools reuse connections between invocations,
-// and handle dropped or expired connections automatically.
 let mysqlPool;
 
 exports.distinct = (req, res) => {
@@ -77,6 +75,26 @@ exports.distinct = (req, res) => {
 };
 
 
+/**
+ * Clean Up
+ */
+exports.cleanUp = (req, res) => {
+
+    console.log("Clean up");
+    if (!mysqlPool) {
+        mysqlPool = mysql.createPool(mysqlConfig);
+    }
+
+    var statement = `DELETE FROM checking`;
+    mysqlPool.query(
+        statement, [],
+        (err, rows, fields) => {
+            console.log(err);
+            res.end("OK");
+        }
+    );
+};
+
 
 // exports.mysqlDemo = (req, res) => {
 //     // Initialize the pool lazily, in case SQL access isn't needed for this
@@ -94,5 +112,4 @@ exports.distinct = (req, res) => {
 //             res.send(JSON.stringify(results));
 //         }
 //     });
-
 // };
