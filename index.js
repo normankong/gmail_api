@@ -8,7 +8,7 @@ let authHelper = require("./lib/auth_helper.js");
 function generateToken(opts) {
 
   console.log("Generate Token");
-  if (opts.req.body.emailAddress == null) return res.end("Bad request");
+  if (opts.req.body.emailAddress == null) return opts.res.end("Bad request");
   
   let myToken = authHelper().generateToken(opts.req.body.emailAddress);
   opts.res.json({
