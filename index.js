@@ -64,6 +64,19 @@ exports.generate = (req, res) => {
   generateToken(opts);
 }
 
+
+/**
+ * Stop Watch Mail request
+ */
+exports.stopWatch = (req, res) => {
+  console.log("Stop watch Email Web Request");
+  var opts = {
+    req: req,
+    res: res
+  }
+
+  if (verifyToken(opts)) gmailAuthenicator().proceedServiceCall(gmailAuthenicator().stopWatch, opts);
+}
 /**
  * Watch Mail request
  */
