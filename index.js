@@ -5,11 +5,13 @@ var gmailFetcher = require("./lib/gmail_fetcher.js");
 var gmailNotifier = require("./lib/gmail_notifier.js");
 let authHelper = require("./lib/auth_helper.js");
 
+let util = require("util");
+
 function generateToken(opts) {
 
   console.log("Generate Token");
   if (opts.req.body.emailAddress == null) return opts.res.end("Bad request");
-  
+
   let myToken = authHelper().generateToken(opts.req.body.emailAddress);
   opts.res.json({
     code: "000",
@@ -24,13 +26,13 @@ function generateToken(opts) {
 function verifyToken(opts) {
 
   console.log("Verify Token");
-  if (opts.req.headers.authorization == null || opts.req.body.emailAddress == null ) {
+  if (opts.req.headers.authorization == null || opts.req.body.emailAddress == null) {
     console.log("Missing parameter");
     opts.res.status(401).json({
       code: "000",
       message: "Bad Request",
-      auth : (opts.req.headers.authorization == null),
-      email : (opts.req.body.emailAddress == null)
+      auth: (opts.req.headers.authorization == null),
+      email: (opts.req.body.emailAddress == null)
     });
     return false;
   }
@@ -164,6 +166,36 @@ exports.listen = (event, callback) => {
   const data = JSON.parse(Buffer.from(pubsubMessage.data, 'base64').toString());
 
   gmailNotifier().listen(event, data);
+
+  callback();
+};
+
+/**
+ * Background Cloud Function to be triggered by Google Pub Sub
+ *
+ * @param {object} event The Cloud Functions event.
+ * @param {function} callback The callback function.
+ */
+exports.topicWatch = (event, callback) => {
+
+  console.log("Incoming new message");
+  //console.log(util.inspect(event, {showHidden: false, depth: null}));
+
+  const pubsubMessage = event.data;
+  const data = JSON.parse(Buffer.from(pubsubMessage.data, 'base64').toString());
+
+  // Prepare the Data object (Simulate to HTTP)
+  event.req = {
+    body: {
+      emailAddress: data.emailAddress
+    }
+  }
+  event.res = {
+    end : console.log
+  };
+
+  // Skip JWT Checking
+  gmailAuthenicator().proceedServiceCall(gmailAuthenicator().subscribeWatch, event);
 
   callback();
 };
