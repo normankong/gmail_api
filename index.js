@@ -4,6 +4,7 @@ var gmailAuthenicator = require("./lib/gmail_authenicator.js");
 var gmailFetcher = require("./lib/gmail_fetcher.js");
 var gmailNotifier = require("./lib/gmail_notifier.js");
 let authHelper = require("./lib/auth_helper.js");
+let cacheHelper = require("./lib/cache_helper.js");
 
 let util = require("util");
 
@@ -204,7 +205,7 @@ exports.topicWatch = (event, callback) => {
     }
   }
   event.res = {
-    end : console.log
+    end: console.log
   };
 
   // Skip JWT Checking
@@ -212,3 +213,43 @@ exports.topicWatch = (event, callback) => {
 
   callback();
 };
+
+/**
+ * Retrieve Cache Mapping List
+ */
+exports.getMapping = (req, res) => {
+  console.log("Retrieve Cache List");
+  var opts = {
+    req: req,
+    res: res
+  }
+
+  // Skip JWT Checking
+  cacheHelper().getMapping("name", opts);
+}
+
+/**
+ * Put Cache Mapping List
+ */
+exports.putMapping = (req, res) => {
+  console.log("Put Cache List");
+  var opts = {
+    req: req,
+    res: res
+  }
+
+  if (verifyToken(opts)) cacheHelper().putMapping("name", opts);
+}
+
+/**
+ * Del Cache Mapping List
+ */
+exports.delMapping = (req, res) => {
+  console.log("Put Cache List");
+  var opts = {
+    req: req,
+    res: res
+  }
+
+  if (verifyToken(opts)) cacheHelper().delMapping("name", opts);
+}
