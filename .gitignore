@@ -71,3 +71,6 @@ package-lock.json
 *credential.json
 *token*.json
 *.zip
+
+tools
+mapping.json
